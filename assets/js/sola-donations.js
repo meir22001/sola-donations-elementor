@@ -1,240 +1,279 @@
-jQuery(document).ready(function ($) {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // --- Helper Functions ---
+    // State
+    const state = {
+        amount: 180,
+        currency: 'ILS',
+        frequency: 'onetime',
+        lang: 'he'
+    };
 
-    function getWidgetData() {
-        var $wrapper = $('.sola-donation-wrapper');
-        if ($wrapper.length) {
-            var configStr = $wrapper.attr('data-sola-config');
-            var stylesStr = $wrapper.attr('data-sola-styles');
-            return {
-                config: configStr ? JSON.parse(configStr) : {},
-                styles: stylesStr ? JSON.parse(stylesStr) : {}
-            };
+    // Translations
+    const translations = {
+        he: {
+            formTitle: 'טופס תרומה לדוגמא',
+            formSubtitle: 'התרומה שלך עוזרת לנו להמשיך בעשייה. כל תרומה, קטנה כגדולה, מצטרפת לשינוי הגדול.',
+            donationDetails: 'פרטי התרומה',
+            oneTime: 'תרומה חד פעמית',
+            monthly: 'הוראת קבע חודשית',
+            chargeDay: 'יום לחיוב בחודש',
+            chargeImmediately: 'לחייב תרומה ראשונה החודש (מיידי)',
+            otherAmount: 'סכום אחר',
+            personalDetails: 'פרטים אישיים',
+            firstName: 'שם פרטי',
+            lastName: 'שם משפחה',
+            phone: 'טלפון נייד',
+            email: 'אימייל',
+            address: 'כתובת',
+            creditDetails: 'פרטי אשראי',
+            cardNumber: 'מספר כרטיס',
+            expiry: 'תוקף',
+            securePayment: 'התשלום מאובטח בתקן PCI DSS המחמיר ביותר',
+            submitBtn: 'תרום {amount} עכשיו',
+            langBtn: 'English',
+            errorGeneric: 'אירעה שגיאה. אנא נסה שנית.',
+            errorMissing: 'אנא מלא את כל השדות החובה.',
+            success: 'התרומה התקבלה בהצלחה! תודה רבה.'
+        },
+        en: {
+            formTitle: 'Donation Form Example',
+            formSubtitle: 'Your donation helps us continue our work. Every donation, small or large, joins the big change.',
+            donationDetails: 'Donation Details',
+            oneTime: 'One-time Donation',
+            monthly: 'Monthly Subscription',
+            chargeDay: 'Charge Day of Month',
+            chargeImmediately: 'Charge first donation immediately',
+            otherAmount: 'Other Amount',
+            personalDetails: 'Personal Details',
+            firstName: 'First Name',
+            lastName: 'Last Name',
+            phone: 'Mobile Phone',
+            email: 'Email',
+            address: 'Address',
+            creditDetails: 'Credit Card Details',
+            cardNumber: 'Card Number',
+            expiry: 'Expiry',
+            securePayment: 'Payment is secured by the strictest PCI DSS standard',
+            submitBtn: 'Donate {amount} Now',
+            langBtn: 'עברית',
+            errorGeneric: 'An error occurred. Please try again.',
+            errorMissing: 'Please fill in all required fields.',
+            success: 'Donation received successfully! Thank you.'
         }
-        return { config: {}, styles: {} };
-    }
+    };
 
-    var widgetData = getWidgetData();
-    var config = widgetData.config;
-    var elementorStyles = widgetData.styles;
+    // Elements
+    const wrapper = document.getElementById('sola-donation-wrapper');
+    const form = document.getElementById('sola-donation-form');
+    const amountBtns = document.querySelectorAll('.sola-amount-btn');
+    const currBtns = document.querySelectorAll('.sola-curr-btn');
+    const customAmountInput = document.getElementById('sola-custom-amount-input');
+    const amountInput = document.getElementById('sola-amount');
+    const currencyInput = document.getElementById('sola-currency');
+    const freqOptions = document.querySelectorAll('.sola-freq-option');
+    const monthlyOptions = document.getElementById('sola-monthly-options');
+    const submitText = document.getElementById('sola-submit-text');
+    const langToggle = document.getElementById('sola-lang-toggle');
+    const messageDiv = document.getElementById('sola-message');
+    const currSymbols = document.querySelectorAll('.sola-curr-symbol');
 
-    if (config.debug_mode) {
-        console.log('Sola Init Started (Tailwind Mode)', config);
-    }
+    // Helpers
+    const getSymbol = (curr) => {
+        switch (curr) {
+            case 'ILS': return '₪';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            default: return '₪';
+        }
+    };
 
-    // --- Initialization ---
-
-    if (typeof sola_vars !== 'undefined' && sola_vars.ifields_key) {
-
-        if (typeof setAccount === 'function') {
-            try {
-                setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
-
-                // Tailwind Dark Mode Styles for iFields
-                var fontStyle = {
-                    'font-family': 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                    'font-size': '16px',
-                    'color': '#ffffff' // White text
-                };
-
-                var inputStyle = {
-                    'color': '#ffffff',
-                    'font-size': '16px'
-                };
-
-                var placeholderStyle = {
-                    'color': '#94a3b8' // Slate-400
-                };
-
-                setIfieldStyle('body', fontStyle);
-                setIfieldStyle('input', inputStyle);
-                setIfieldStyle('::placeholder', placeholderStyle);
-
-                if (config.debug_mode) console.log('Sola: Dark mode styles applied.');
-
-            } catch (e) {
-                console.error('Sola SDK Init Failed:', e);
+    const updateUI = () => {
+        // Update Amount Buttons
+        amountBtns.forEach(btn => {
+            if (parseInt(btn.dataset.amount) === state.amount && !customAmountInput.value) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
             }
+        });
+
+        // Update Currency Buttons
+        currBtns.forEach(btn => {
+            if (btn.dataset.curr === state.currency) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Update Frequency
+        freqOptions.forEach(opt => {
+            const input = opt.querySelector('input');
+            if (input.value === state.frequency) {
+                opt.classList.add('active');
+                input.checked = true;
+            } else {
+                opt.classList.remove('active');
+            }
+        });
+
+        // Toggle Monthly Options
+        if (state.frequency === 'monthly') {
+            monthlyOptions.style.display = 'flex';
         } else {
-            console.error('Sola Error: setAccount function not found.');
+            monthlyOptions.style.display = 'none';
         }
 
-    } else {
-        console.error('Sola Error: sola_vars or ifields_key missing.');
-    }
+        // Update Submit Button Text
+        const symbol = getSymbol(state.currency);
+        const t = translations[state.lang];
+        submitText.textContent = t.submitBtn.replace('{amount}', symbol + state.amount);
 
-    // --- UI Logic (Tailwind Classes) ---
+        // Update Currency Symbols
+        currSymbols.forEach(el => el.textContent = symbol);
+    };
 
-    // Amount Selection
-    $('.sola-amount-btn').on('click', function () {
-        // Reset all buttons to default state
-        $('.sola-amount-btn').removeClass('border-rose-400 bg-rose-400/10 text-rose-400 selected')
-            .addClass('border-slate-700 text-slate-300');
+    const updateLang = () => {
+        const t = translations[state.lang];
 
-        // Set selected button state
-        $(this).removeClass('border-slate-700 text-slate-300')
-            .addClass('border-rose-400 bg-rose-400/10 text-rose-400 selected');
+        // Direction
+        wrapper.setAttribute('dir', state.lang === 'he' ? 'rtl' : 'ltr');
 
-        $('.sola-custom-amount').val(''); // Clear custom amount
+        // Text Content
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (t[key]) el.textContent = t[key];
+        });
+
+        // Placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.dataset.i18nPlaceholder;
+            if (t[key]) el.placeholder = t[key];
+        });
+
+        langToggle.textContent = t.langBtn;
+        updateUI();
+    };
+
+    // Event Listeners
+
+    // Amount Buttons
+    amountBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.amount = parseInt(btn.dataset.amount);
+            amountInput.value = state.amount;
+            customAmountInput.value = '';
+            updateUI();
+        });
     });
 
-    $('.sola-custom-amount').on('focus', function () {
-        // Deselect all buttons
-        $('.sola-amount-btn').removeClass('border-rose-400 bg-rose-400/10 text-rose-400 selected')
-            .addClass('border-slate-700 text-slate-300');
+    // Custom Amount
+    customAmountInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (val) {
+            state.amount = parseFloat(val);
+            amountInput.value = state.amount;
+            amountBtns.forEach(b => b.classList.remove('active'));
+        } else {
+            state.amount = 0;
+        }
+        updateUI();
     });
 
-    // Frequency Toggle
-    $('.sola-frequency-btn').on('click', function () {
-        var frequency = $(this).data('frequency');
-
-        // Update hidden input
-        $('#sola_is_recurring').val(frequency === 'monthly' ? '1' : '0');
-
-        // Reset all buttons
-        $('.sola-frequency-btn').removeClass('text-white bg-slate-700 shadow-sm')
-            .addClass('text-slate-400 hover:text-white');
-
-        // Set active button
-        $(this).removeClass('text-slate-400 hover:text-white')
-            .addClass('text-white bg-slate-700 shadow-sm');
+    // Currency Buttons
+    currBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.currency = btn.dataset.curr;
+            currencyInput.value = state.currency;
+            updateUI();
+        });
     });
 
-    // --- Submission Logic ---
+    // Frequency
+    freqOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT') return;
 
-    $('#sola-submit-btn').on('click', function (e) {
+            const input = opt.querySelector('input');
+            state.frequency = input.value;
+            updateUI();
+        });
+        opt.querySelector('input').addEventListener('change', (e) => {
+            state.frequency = e.target.value;
+            updateUI();
+        });
+    });
+
+    // Language Toggle
+    langToggle.addEventListener('click', () => {
+        state.lang = state.lang === 'he' ? 'en' : 'he';
+        updateLang();
+    });
+
+    // Form Submission
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        var $btn = $(this);
-        var amount = getDonationAmount();
-
-        if (!amount || amount <= 0) {
-            alert('Please select or enter a valid donation amount.');
-            return;
-        }
+        messageDiv.textContent = '';
+        messageDiv.className = 'sola-message';
 
         // Basic Validation
-        var isValid = true;
-        $('.sola-donor-info input[required]').each(function () {
-            if ($(this).val() === '') {
-                isValid = false;
-                $(this).addClass('border-rose-500').removeClass('border-slate-700');
-            } else {
-                $(this).removeClass('border-rose-500').addClass('border-slate-700');
-            }
-        });
-
-        if (!isValid) {
-            alert('Please fill in all required fields.');
+        if (!state.amount || state.amount <= 0) {
+            messageDiv.textContent = translations[state.lang].errorMissing;
+            messageDiv.classList.add('error');
             return;
         }
 
-        $btn.prop('disabled', true).html('<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...');
-        $('#sola-message-container').html('');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-        // Get Token from Sola
-        if (typeof getTokens === 'function') {
-            getTokens(function () {
-                // Success Callback
-                var token = '';
-                var data = arguments[0];
+        // Add state values explicitly
+        data.amount = state.amount;
+        data.currency = state.currency;
+        data.frequency = state.frequency;
 
-                if (data && data.xToken) {
-                    token = data.xToken;
-                } else {
-                    // Fallback for standard IDs
-                    try {
-                        token = document.getElementById('ifields_card_number').contentWindow.document.getElementById('token').value;
-                    } catch (e) {
-                        console.log('Could not retrieve token from DOM');
-                    }
-                }
+        // Checkbox handling
+        if (data.frequency === 'monthly') {
+            data.chargeImmediately = form.querySelector('#sola-charge-immediately').checked;
+            data.chargeDay = form.querySelector('#sola-charge-day').value;
+        }
 
-                if (token) {
-                    processDonation(token);
-                } else {
-                    $btn.prop('disabled', false).text('Donate Now');
-                    $('#sola-message-container').html('<p class="text-rose-400 mt-2">Error: Could not retrieve payment token.</p>');
-                }
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
 
-            }, function (data) {
-                // Error Callback
-                if (config.debug_mode) console.error('Sola Token Error:', data);
-                $btn.prop('disabled', false).text('Donate Now');
-                $('#sola-message-container').html('<p class="text-rose-400 mt-2">' + (data.errorMessage || 'Error generating token') + '</p>');
+        try {
+            const response = await fetch(solaData.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': solaData.nonce
+                },
+                body: JSON.stringify(data)
             });
-        } else {
-            console.error('Sola Error: getTokens function not found.');
-            $btn.prop('disabled', false).text('Donate Now');
-            $('#sola-message-container').html('<p class="text-rose-400 mt-2">Payment system error.</p>');
+
+            const result = await response.json();
+
+            if (result.success) {
+                messageDiv.textContent = translations[state.lang].success;
+                messageDiv.classList.add('success');
+                if (solaData.redirectUrl) {
+                    window.location.href = solaData.redirectUrl;
+                }
+            } else {
+                messageDiv.textContent = result.message || translations[state.lang].errorGeneric;
+                messageDiv.classList.add('error');
+            }
+        } catch (error) {
+            messageDiv.textContent = translations[state.lang].errorGeneric;
+            messageDiv.classList.add('error');
+            console.error(error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         }
     });
 
-    function getDonationAmount() {
-        if ($('.sola-amount-btn.selected').length > 0) {
-            return $('.sola-amount-btn.selected').data('amount');
-        } else {
-            return $('.sola-custom-amount').val();
-        }
-    }
-
-    function getSelectedCurrency() {
-        if ($('#sola_currency_select').length > 0) {
-            return $('#sola_currency_select').val();
-        }
-        return config.currency || 'USD';
-    }
-
-    function processDonation(token) {
-        var $btn = $('#sola-submit-btn');
-        var amount = getDonationAmount();
-        var currentCurrency = getSelectedCurrency();
-
-        // Collect Donor Data
-        var donorData = {
-            first_name: $('input[name="first_name"]').val() || '',
-            last_name: $('input[name="last_name"]').val() || '',
-            email: $('input[name="email"]').val() || '',
-            phone: $('input[name="phone"]').val() || '',
-            address: $('input[name="address"]').val() || '',
-            city: $('input[name="city"]').val() || '',
-            zip: $('input[name="zip"]').val() || ''
-        };
-
-        // Recurring Logic
-        var isRecurring = $('#sola_is_recurring').val() === '1';
-
-        $.ajax({
-            url: sola_vars.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'sola_process_donation',
-                nonce: sola_vars.nonce,
-                xToken: token,
-                amount: amount,
-                currency: currentCurrency,
-                is_recurring: isRecurring,
-                recurring_day: config.recurring_day || 1,
-                donor_data: donorData
-            },
-            success: function (response) {
-                if (response.success) {
-                    $('#sola-message-container').html('<p class="text-green-400 mt-2">' + response.data.message + '</p>');
-                    $btn.text('Donation Successful');
-
-                    if (response.data.redirect_url) {
-                        window.location.href = response.data.redirect_url;
-                    }
-                } else {
-                    $('#sola-message-container').html('<p class="text-rose-400 mt-2">' + response.data.message + '</p>');
-                    $btn.prop('disabled', false).text('Donate Now');
-                }
-            },
-            error: function () {
-                $('#sola-message-container').html('<p class="text-rose-400 mt-2">Server error. Please try again.</p>');
-                $btn.prop('disabled', false).text('Donate Now');
-            }
-        });
-    }
+    // Init
+    updateUI();
 });
