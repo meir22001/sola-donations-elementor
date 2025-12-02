@@ -65,6 +65,32 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 	}
 
 	/**
+	 * Get script dependencies.
+	 *
+	 * Retrieve the list of script dependencies the widget requires.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return array Widget scripts dependencies.
+	 */
+	public function get_script_depends() {
+		return [ 'sola-donations-js' ];
+	}
+
+	/**
+	 * Get style dependencies.
+	 *
+	 * Retrieve the list of style dependencies the widget requires.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return array Widget styles dependencies.
+	 */
+	public function get_style_depends() {
+		return [ 'sola-donations-css' ];
+	}
+
+	/**
 	 * Register widget controls.
 	 *
 	 * Adds different input fields to allow the user to change and customize the widget settings.

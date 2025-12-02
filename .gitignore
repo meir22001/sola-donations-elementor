@@ -1,0 +1,25 @@
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/themes/*/
+!wp-content/themes/sola-donations-elementor/
+wp-content/plugins/*/
+!wp-content/plugins/sola-donations-elementor/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Vendor
+vendor/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
