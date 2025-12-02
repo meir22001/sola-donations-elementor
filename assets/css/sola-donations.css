@@ -95,15 +95,24 @@
 }
 
 /* Currency Wrapper */
-.sola-currency-wrapper {
+.sola-currency-wrapper,
+.sola-currency-row {
     margin-bottom: 20px;
 }
 
 .sola-currency-select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 16px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.sola-currency-select:focus {
+    outline: none;
+    border-color: #0073aa;
 }
 
 /* Recurring Toggle */

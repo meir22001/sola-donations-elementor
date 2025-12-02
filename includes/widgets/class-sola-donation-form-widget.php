@@ -824,13 +824,15 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 			
 			<!-- Currency Selection (Explicit Check) -->
 			<?php if ( 'yes' === $settings['allow_user_currency'] ) : ?>
-				<div class="sola-currency-wrapper">
-					<label for="sola_currency_select"><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
-					<select id="sola_currency_select" class="sola-currency-select" name="donation_currency">
-						<option value="USD" <?php selected( $settings['currency'], 'USD' ); ?>>USD ($)</option>
-						<option value="ILS" <?php selected( $settings['currency'], 'ILS' ); ?>>ILS (₪)</option>
-						<option value="EUR" <?php selected( $settings['currency'], 'EUR' ); ?>>EUR (€)</option>
-					</select>
+				<div class="sola-form-row sola-currency-row">
+					<div class="sola-field-group">
+						<label for="sola_currency_select"><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
+						<select id="sola_currency_select" class="sola-currency-select" name="donation_currency">
+							<option value="USD" <?php selected( $settings['currency'], 'USD' ); ?>>$ (USD)</option>
+							<option value="ILS" <?php selected( $settings['currency'], 'ILS' ); ?>>₪ (ILS)</option>
+							<option value="EUR" <?php selected( $settings['currency'], 'EUR' ); ?>>€ (EUR)</option>
+						</select>
+					</div>
 				</div>
 			<?php endif; ?>
 
@@ -891,20 +893,20 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 				<?php endif; ?>
 			</div>
 
-			<!-- Payment Fields (iFields) - Explicit IDs -->
+			<!-- Payment Fields (iFields) - Standard IDs -->
 			<div id="sola-payment-fields-container">
 				<div class="sola-field-group">
 					<label><?php esc_html_e( 'Card Number', 'sola-donations' ); ?></label>
-					<div id="sola-card-number" class="sola-ifield-container"></div>
+					<div id="ifields_card_number" class="sola-ifield-container"></div>
 				</div>
 				<div class="sola-form-row">
 					<div class="sola-field-group">
 						<label><?php esc_html_e( 'Expiration', 'sola-donations' ); ?></label>
-						<div id="sola-expiry" class="sola-ifield-container"></div>
+						<div id="ifields_expiration_date" class="sola-ifield-container"></div>
 					</div>
 					<div class="sola-field-group">
 						<label><?php esc_html_e( 'CVV', 'sola-donations' ); ?></label>
-						<div id="sola-cvv" class="sola-ifield-container"></div>
+						<div id="ifields_cvv" class="sola-ifield-container"></div>
 					</div>
 				</div>
 			</div>

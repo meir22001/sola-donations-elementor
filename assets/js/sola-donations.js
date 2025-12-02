@@ -28,42 +28,59 @@ jQuery(document).ready(function ($) {
 
     if (typeof sola_vars !== 'undefined' && sola_vars.ifields_key) {
 
-        // Check if iField containers exist
-        if ($('#sola-card-number').length === 0) {
-            console.error('Sola Error: iField container #sola-card-number missing!');
+        // Wait for SDK to be ready if needed, or just init
+        // Standard Sola SDK puts 'setAccount' on window.
+        if (typeof setAccount === 'function') {
+            try {
+                if (config.debug_mode) console.log('Sola: Calling setAccount...');
+
+                setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
+
+                // Apply Styles using setIfieldStyle
+                // Sola SDK expects specific style keys.
+                // We map Elementor styles to Sola keys.
+
+                var fontStyle = {
+                    'font-family': elementorStyles.fontFamily || 'inherit',
+                    'font-size': elementorStyles.fontSize || '14px',
+                    'color': elementorStyles.textColor || '#333'
+                };
+
+                var inputStyle = {
+                    'color': elementorStyles.textColor || '#333',
+                    'font-size': elementorStyles.fontSize || '14px'
+                };
+
+                var placeholderStyle = {
+                    'color': elementorStyles.placeholderColor || '#999'
+                };
+
+                // Apply to all fields
+                // Note: Sola automatically finds iframes based on IDs if they exist, 
+                // OR it injects them into divs with specific IDs.
+                // The standard IDs are usually: 'ifields_card_number', 'ifields_expiration_date', 'ifields_cvv'
+                // OR we can specify them.
+                // Since we are using divs with IDs in the widget, Sola should find them if we use standard IDs.
+                // If we use custom IDs, we might need to configure Sola.
+                // However, `setAccount` initializes the library.
+                // The library then looks for containers.
+
+                // Let's assume we update the Widget to use standard IDs:
+                // ifields_card_number, ifields_expiration_date, ifields_cvv
+
+                setIfieldStyle('body', fontStyle);
+                setIfieldStyle('input', inputStyle);
+                setIfieldStyle('::placeholder', placeholderStyle);
+
+                if (config.debug_mode) console.log('Sola: Styles applied.');
+
+            } catch (e) {
+                console.error('Sola SDK Init Failed:', e);
+            }
         } else {
-            if (config.debug_mode) console.log('Sola: Containers found, initializing SDK...');
+            console.error('Sola Error: setAccount function not found. SDK not loaded?');
         }
 
-        // Map Elementor Styles to Sola SDK Format
-        var solaStyles = {
-            body: {
-                'font-family': elementorStyles.fontFamily || 'inherit',
-                'font-size': elementorStyles.fontSize || '14px',
-                'color': elementorStyles.textColor || '#333'
-            },
-            input: {
-                'color': elementorStyles.textColor || '#333',
-                'font-size': elementorStyles.fontSize || '14px'
-            },
-            '::placeholder': {
-                'color': elementorStyles.placeholderColor || '#999'
-            }
-        };
-
-        // Initialize Sola
-        try {
-            setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
-
-            // Load iFields
-            if ($('#sola-ifield-card-number').length) {
-                loadIField('sola-ifield-card-number', 'card-number', solaStyles);
-                loadIField('sola-ifield-exp', 'exp', solaStyles);
-                loadIField('sola-ifield-cvv', 'cvv', solaStyles);
-            }
-        } catch (e) {
-            console.error('Sola SDK Init Failed:', e);
-        }
     } else {
         console.error('Sola Error: sola_vars or ifields_key missing.');
     }
@@ -79,6 +96,11 @@ jQuery(document).ready(function ($) {
 
     $('.sola-custom-amount').on('focus', function () {
         $('.sola-amount-btn').removeClass('selected');
+    });
+
+    // Currency Selection (Sync with hidden field if needed, or just read value)
+    $('#sola_currency_select').on('change', function () {
+        if (config.debug_mode) console.log('Currency changed to:', $(this).val());
     });
 
     // --- Submission Logic ---
@@ -114,37 +136,44 @@ jQuery(document).ready(function ($) {
         $('#sola-message-container').html('');
 
         // Get Token from Sola
-        getTokens(function () {
-            // Success Callback
-            var token = '';
-            var data = arguments[0];
+        // Sola SDK `getTokens` function
+        if (typeof getTokens === 'function') {
+            getTokens(function () {
+                // Success Callback
+                var token = '';
+                var data = arguments[0];
 
-            if (config.debug_mode) console.log('Sola Token Success:', data);
+                if (config.debug_mode) console.log('Sola Token Success:', data);
 
-            if (data && data.xToken) {
-                token = data.xToken;
-            } else {
-                // Fallback: Try to find it in the DOM
-                try {
-                    token = document.getElementById('sola-ifield-card-number').contentWindow.document.getElementById('token').value;
-                } catch (e) {
-                    console.log('Could not retrieve token from DOM');
+                if (data && data.xToken) {
+                    token = data.xToken;
+                } else {
+                    // Fallback: Try to find it in the DOM (Standard ID)
+                    try {
+                        token = document.getElementById('ifields_card_number').contentWindow.document.getElementById('token').value;
+                    } catch (e) {
+                        console.log('Could not retrieve token from DOM');
+                    }
                 }
-            }
 
-            if (token) {
-                processDonation(token);
-            } else {
+                if (token) {
+                    processDonation(token);
+                } else {
+                    $btn.prop('disabled', false).text('Donate Now');
+                    $('#sola-message-container').html('<p class="sola-error">Error: Could not retrieve payment token.</p>');
+                }
+
+            }, function (data) {
+                // Error Callback
+                if (config.debug_mode) console.error('Sola Token Error:', data);
                 $btn.prop('disabled', false).text('Donate Now');
-                $('#sola-message-container').html('<p class="sola-error">Error: Could not retrieve payment token.</p>');
-            }
-
-        }, function (data) {
-            // Error Callback
-            if (config.debug_mode) console.error('Sola Token Error:', data);
+                $('#sola-message-container').html('<p class="sola-error">' + (data.errorMessage || 'Error generating token') + '</p>');
+            });
+        } else {
+            console.error('Sola Error: getTokens function not found.');
             $btn.prop('disabled', false).text('Donate Now');
-            $('#sola-message-container').html('<p class="sola-error">' + (data.errorMessage || 'Error generating token') + '</p>');
-        });
+            $('#sola-message-container').html('<p class="sola-error">Payment system error.</p>');
+        }
     });
 
     function getDonationAmount() {
