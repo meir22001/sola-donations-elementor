@@ -1,123 +1,190 @@
+/* Main Wrapper */
 .sola-donation-wrapper {
-    max-width: 500px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background: #fff;
+    font-family: inherit;
+    box-sizing: border-box;
+    position: relative;
 }
 
-.sola-form-title {
-    text-align: center;
-    margin-bottom: 20px;
+.sola-donation-wrapper * {
+    box-sizing: border-box;
 }
 
-.sola-amount-selector {
+/* Form Layout */
+.sola-form-row {
     display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: center;
-}
-
-.sola-amount-btn {
-    padding: 10px 20px;
-    border: 1px solid #ccc;
-    background: #f9f9f9;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-}
-
-.sola-amount-btn:hover {
-    background: #e9e9e9;
-}
-
-.sola-amount-btn.selected {
-    background: #0073aa;
-    /* Default fallback, overridden by widget settings */
-    color: #fff;
-    border-color: #0073aa;
-}
-
-.sola-custom-amount-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.sola-custom-amount {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100px;
-}
-
-.sola-recurring-toggle {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-#sola-payment-fields-container {
-    margin-bottom: 20px;
 }
 
 .sola-field-group {
+    flex: 1;
+    min-width: 200px;
+    /* Ensure fields don't get too small */
     margin-bottom: 15px;
 }
 
 .sola-field-group label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
-.sola-ifield {
+.sola-field-group input,
+.sola-field-group select {
     width: 100%;
-    height: 40px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.sola-field-group input:focus,
+.sola-field-group select:focus {
+    outline: none;
+    border-color: #0073aa;
+}
+
+/* Amounts Grid */
+.sola-amounts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sola-amount-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sola-amount-btn:hover {
+    background-color: #f5f5f5;
+}
+
+.sola-amount-btn.selected {
+    background-color: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
+/* Custom Amount */
+.sola-custom-amount-wrapper {
+    display: flex;
+}
+
+.sola-custom-amount {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-height: 45px;
+    /* Match button height */
+}
+
+/* Currency Wrapper */
+.sola-currency-wrapper {
+    margin-bottom: 20px;
+}
+
+.sola-currency-select {
+    width: 100%;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
-.sola-field-row {
+/* Recurring Toggle */
+.sola-recurring-toggle {
+    margin-bottom: 20px;
     display: flex;
-    gap: 15px;
+    align-items: center;
 }
 
-.sola-field-row .sola-field-group {
-    flex: 1;
+.sola-recurring-toggle label {
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
+/* iFields (Credit Card) */
+#sola-payment-fields-container {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.sola-ifield-container {
+    min-height: 45px;
+    /* CRITICAL: Prevents invisible fields */
+    border: 1px solid #ccc;
+    background-color: #fff;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    display: block;
+}
+
+.sola-ifield {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Submit Button */
 .sola-donation-btn {
     width: 100%;
-    padding: 12px;
-    background: #0073aa;
+    padding: 15px;
+    background-color: #0073aa;
     color: #fff;
     border: none;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
 }
 
 .sola-donation-btn:hover {
-    opacity: 0.9;
+    background-color: #005177;
 }
 
 .sola-donation-btn:disabled {
-    background: #ccc;
+    background-color: #ccc;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
+/* Messages */
 #sola-message-container {
     margin-top: 15px;
     text-align: center;
-}
-
-.sola-error {
-    color: #dc3232;
+    font-weight: 600;
 }
 
 .sola-success {
-    color: #46b450;
+    color: #28a745;
+}
+
+.sola-error {
+    color: #dc3545;
 }

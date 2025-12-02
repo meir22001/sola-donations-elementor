@@ -1,46 +1,61 @@
 jQuery(document).ready(function ($) {
 
-    // Helper to get config
-    function getWidgetConfig() {
+    // --- Helper Functions ---
+
+    function getWidgetData() {
         var $wrapper = $('.sola-donation-wrapper');
         if ($wrapper.length) {
             var configStr = $wrapper.attr('data-sola-config');
-            if (configStr) {
-                return JSON.parse(configStr);
-            }
+            var stylesStr = $wrapper.attr('data-sola-styles');
+            return {
+                config: configStr ? JSON.parse(configStr) : {},
+                styles: stylesStr ? JSON.parse(stylesStr) : {}
+            };
         }
-        return {};
+        return { config: {}, styles: {} };
     }
 
-    var config = getWidgetConfig();
+    var widgetData = getWidgetData();
+    var config = widgetData.config;
+    var elementorStyles = widgetData.styles;
 
-    // Initialize Sola iFields
+    // --- Initialization ---
+
     if (typeof sola_vars !== 'undefined' && sola_vars.ifields_key) {
-        setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
 
-        // Define iFields styles from config
-        var style = {
-            'font-family': 'Helvetica, sans-serif',
-            'font-size': '14px',
-            'color': '#333'
+        // Map Elementor Styles to Sola SDK Format
+        var solaStyles = {
+            body: {
+                'font-family': elementorStyles.fontFamily || 'inherit',
+                'font-size': elementorStyles.fontSize || '14px',
+                'color': elementorStyles.textColor || '#333'
+            },
+            input: {
+                'color': elementorStyles.textColor || '#333',
+                'font-size': elementorStyles.fontSize || '14px'
+            },
+            '::placeholder': {
+                'color': elementorStyles.placeholderColor || '#999'
+            }
         };
 
-        if (config.ifields_styles) {
-            style = config.ifields_styles;
-        }
+        // Initialize Sola
+        setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
 
         // Load iFields
-        loadIField('sola-ifield-card-number', 'card-number', style);
-        loadIField('sola-ifield-exp', 'exp', style);
-        loadIField('sola-ifield-cvv', 'cvv', style);
+        if ($('#sola-ifield-card-number').length) {
+            loadIField('sola-ifield-card-number', 'card-number', solaStyles);
+            loadIField('sola-ifield-exp', 'exp', solaStyles);
+            loadIField('sola-ifield-cvv', 'cvv', solaStyles);
+        }
     }
+
+    // --- Event Listeners ---
 
     // Amount Selection
     $('.sola-amount-btn').on('click', function () {
         $('.sola-amount-btn').removeClass('selected');
         $(this).addClass('selected');
-
-        var amount = $(this).data('amount');
         $('.sola-custom-amount').val(''); // Clear custom amount
     });
 
@@ -48,29 +63,8 @@ jQuery(document).ready(function ($) {
         $('.sola-amount-btn').removeClass('selected');
     });
 
-    // Wallet Buttons Logic
-    if (config.enable_wallets === 'yes') {
-        $('#sola-google-pay-btn').on('click', function () {
-            initiateWalletPayment('google_pay');
-        });
-        $('#sola-apple-pay-btn').on('click', function () {
-            initiateWalletPayment('apple_pay');
-        });
-    }
+    // --- Submission Logic ---
 
-    function initiateWalletPayment(walletType) {
-        // Placeholder for Sola Wallet Flow
-        // Real implementation would involve:
-        // 1. Check if wallet is available (using Sola SDK)
-        // 2. Trigger payment sheet
-        // 3. On success, get token and call processDonation(token, 'wallet')
-
-        alert('Wallet payment (' + walletType + ') initiated. (Simulation)');
-        // Simulate success for now
-        // processDonation({ xToken: 'simulated_wallet_token' }, true);
-    }
-
-    // Form Submission
     $('#sola-submit-btn').on('click', function (e) {
         e.preventDefault();
 
@@ -82,21 +76,48 @@ jQuery(document).ready(function ($) {
             return;
         }
 
+        // Basic Validation for Required Fields
+        var isValid = true;
+        $('.sola-donor-info input[required]').each(function () {
+            if ($(this).val() === '') {
+                isValid = false;
+                $(this).css('border-color', 'red');
+            } else {
+                $(this).css('border-color', '#ccc');
+            }
+        });
+
+        if (!isValid) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
         $btn.prop('disabled', true).text('Processing...');
         $('#sola-message-container').html('');
 
-        // Get Token
+        // Get Token from Sola
         getTokens(function () {
-            // Success Callback - token is in the hidden field inside iframe, 
-            // but standard Sola flow usually returns data in callback or we access it.
-            // Let's assume we get the token via SDK method or it's auto-injected.
-            // For this implementation, we'll assume the token is retrieved via SDK helper or DOM.
+            // Success Callback
+            var token = '';
+            var data = arguments[0];
 
-            // In a real Sola integration, getTokens usually doesn't return the token directly in the callback args 
-            // in all versions, but let's assume standard behavior:
-            var token = document.getElementById('sola-ifield-card-number').contentWindow.document.getElementById('token').value;
+            if (data && data.xToken) {
+                token = data.xToken;
+            } else {
+                // Fallback: Try to find it in the DOM
+                try {
+                    token = document.getElementById('sola-ifield-card-number').contentWindow.document.getElementById('token').value;
+                } catch (e) {
+                    console.log('Could not retrieve token from DOM');
+                }
+            }
 
-            processDonation({ xToken: token }, false);
+            if (token) {
+                processDonation(token);
+            } else {
+                $btn.prop('disabled', false).text('Donate Now');
+                $('#sola-message-container').html('<p class="sola-error">Error: Could not retrieve payment token.</p>');
+            }
 
         }, function (data) {
             // Error Callback
@@ -113,18 +134,32 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    function processDonation(data, isWallet) {
+    function getSelectedCurrency() {
+        if ($('.sola-currency-select').length > 0) {
+            return $('.sola-currency-select').val();
+        }
+        return config.currency || 'USD';
+    }
+
+    function processDonation(token) {
         var $btn = $('#sola-submit-btn');
         var amount = getDonationAmount();
+        var currentCurrency = getSelectedCurrency();
+
+        // Collect Donor Data
+        var donorData = {
+            first_name: $('input[name="first_name"]').val() || '',
+            last_name: $('input[name="last_name"]').val() || '',
+            email: $('input[name="email"]').val() || '',
+            phone: $('input[name="phone"]').val() || '',
+            address: $('input[name="address"]').val() || '',
+            city: $('input[name="city"]').val() || '',
+            zip: $('input[name="zip"]').val() || ''
+        };
 
         // Recurring Logic
         var isRecurring = false;
-        var recurringDay = config.recurring_day || 1;
-        var chargeImmediately = config.charge_immediately === 'yes';
-
-        if (config.donation_type === 'recurring') {
-            isRecurring = true;
-        } else if (config.donation_type === 'both') {
+        if (config.recurring_enabled === 'yes') {
             isRecurring = $('input[name="is_recurring"]').is(':checked');
         }
 
@@ -134,22 +169,19 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'sola_process_donation',
                 nonce: sola_vars.nonce,
-                xToken: data.xToken,
+                xToken: token,
                 amount: amount,
+                currency: currentCurrency,
                 is_recurring: isRecurring,
-                recurring_day: recurringDay,
-                charge_immediately: chargeImmediately,
-                currency: config.currency,
-                webhook_url: config.webhook === 'yes' ? config.webhook_url : '',
-                admin_email: config.email_admin === 'yes' ? config.admin_email : '',
-                redirect_url: config.redirect === 'yes' ? config.redirect_url : ''
+                recurring_day: config.recurring_day || 1,
+                donor_data: donorData
             },
             success: function (response) {
                 if (response.success) {
                     $('#sola-message-container').html('<p class="sola-success">' + response.data.message + '</p>');
                     $btn.text('Donation Successful');
 
-                    // Post-Success Actions
+                    // Optional: Redirect
                     if (response.data.redirect_url) {
                         window.location.href = response.data.redirect_url;
                     }

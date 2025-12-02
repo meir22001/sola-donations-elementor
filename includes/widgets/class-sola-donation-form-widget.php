@@ -12,226 +12,61 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 
-	/**
-	 * Get widget name.
-	 *
-	 * Retrieve widget name.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 * @return string Widget name.
-	 */
 	public function get_name() {
 		return 'sola_donation_form';
 	}
 
-	/**
-	 * Get widget title.
-	 *
-	 * Retrieve widget title.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 * @return string Widget title.
-	 */
 	public function get_title() {
 		return esc_html__( 'Sola Donation Form', 'sola-donations' );
 	}
 
-	/**
-	 * Get widget icon.
-	 *
-	 * Retrieve widget icon.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 * @return string Widget icon.
-	 */
 	public function get_icon() {
 		return 'eicon-form-horizontal';
 	}
 
-	/**
-	 * Get widget categories.
-	 *
-	 * Retrieve the list of categories the widget belongs to.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 * @return array Widget categories.
-	 */
 	public function get_categories() {
 		return [ 'general' ];
 	}
 
-	/**
-	 * Get script dependencies.
-	 *
-	 * Retrieve the list of script dependencies the widget requires.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 * @return array Widget scripts dependencies.
-	 */
 	public function get_script_depends() {
 		return [ 'sola-donations-js' ];
 	}
 
-	/**
-	 * Get style dependencies.
-	 *
-	 * Retrieve the list of style dependencies the widget requires.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 * @return array Widget styles dependencies.
-	 */
 	public function get_style_depends() {
 		return [ 'sola-donations-css' ];
 	}
 
-	/**
-	 * Register widget controls.
-	 *
-	 * Adds different input fields to allow the user to change and customize the widget settings.
-	 *
-	 * @since 1.0.0
-	 * @access protected
-	 */
 	protected function register_controls() {
 
+		// --- CONTENT TAB ---
+
+		// 1. Payment Settings
 		$this->start_controls_section(
-			'content_section',
+			'section_payment_settings',
 			[
-				'label' => esc_html__( 'Content', 'sola-donations' ),
+				'label' => esc_html__( 'Payment Settings', 'sola-donations' ),
 				'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
 			]
 		);
 
 		$this->add_control(
-			'form_title',
+			'api_mode',
 			[
-				'label' => esc_html__( 'Form Title', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::TEXT,
-				'default' => esc_html__( 'Support Our Cause', 'sola-donations' ),
-				'placeholder' => esc_html__( 'Type your title here', 'sola-donations' ),
-			]
-		);
-
-		$this->add_control(
-			'donation_amounts',
-			[
-				'label' => esc_html__( 'Predefined Amounts (comma separated)', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::TEXT,
-				'default' => '18, 36, 72, 180',
-				'description' => esc_html__( 'Enter amounts separated by commas (e.g. 10, 20, 50)', 'sola-donations' ),
-			]
-		);
-
-		$this->add_control(
-			'show_custom_amount',
-			[
-				'label' => esc_html__( 'Allow Custom Amount', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'label_on' => esc_html__( 'Yes', 'sola-donations' ),
-				'label_off' => esc_html__( 'No', 'sola-donations' ),
-				'return_value' => 'yes',
-				'default' => 'yes',
-			]
-		);
-
-		$this->add_control(
-			'enable_recurring',
-			[
-				'label' => esc_html__( 'Enable Recurring Donations', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'label_on' => esc_html__( 'Yes', 'sola-donations' ),
-				'label_off' => esc_html__( 'No', 'sola-donations' ),
-				'return_value' => 'yes',
-				'default' => 'yes',
-			]
-		);
-
-		$this->end_controls_section();
-
-		$this->start_controls_section(
-			'style_section',
-			[
-				'label' => esc_html__( 'Style', 'sola-donations' ),
-				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'button_color',
-			[
-				'label' => esc_html__( 'Button Color', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} .sola-donation-btn' => 'background-color: {{VALUE}}',
-					'{{WRAPPER}} .sola-amount-btn.selected' => 'background-color: {{VALUE}}; border-color: {{VALUE}}; color: #fff;',
-				],
-			]
-		);
-
-		$this->end_controls_section();
-
-		// --- Payment Options Section ---
-		$this->start_controls_section(
-			'payment_options_section',
-			[
-				'label' => esc_html__( 'Payment Options', 'sola-donations' ),
-				'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
-			]
-		);
-
-		$this->add_control(
-			'donation_type',
-			[
-				'label' => esc_html__( 'Donation Type', 'sola-donations' ),
+				'label' => esc_html__( 'API Mode', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::SELECT,
-				'default' => 'both',
+				'default' => 'sandbox',
 				'options' => [
-					'one_time' => esc_html__( 'One-Time Only', 'sola-donations' ),
-					'recurring' => esc_html__( 'Recurring Only', 'sola-donations' ),
-					'both' => esc_html__( 'Both (User Selects)', 'sola-donations' ),
+					'sandbox' => esc_html__( 'Sandbox', 'sola-donations' ),
+					'live' => esc_html__( 'Live', 'sola-donations' ),
 				],
-			]
-		);
-
-		$this->add_control(
-			'recurring_payment_day',
-			[
-				'label' => esc_html__( 'Recurring Payment Day', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SELECT,
-				'default' => '1',
-				'options' => array_combine( range( 1, 28 ), range( 1, 28 ) ),
-				'condition' => [
-					'donation_type!' => 'one_time',
-				],
-			]
-		);
-
-		$this->add_control(
-			'charge_immediately',
-			[
-				'label' => esc_html__( 'Charge Immediately?', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'label_on' => esc_html__( 'Yes', 'sola-donations' ),
-				'label_off' => esc_html__( 'No', 'sola-donations' ),
-				'return_value' => 'yes',
-				'default' => 'yes',
-				'description' => esc_html__( 'If checked, charges now and sets next date based on Payment Day.', 'sola-donations' ),
-				'condition' => [
-					'donation_type!' => 'one_time',
-				],
+				'description' => esc_html__( 'Ensure your API keys in plugin settings match this mode.', 'sola-donations' ),
 			]
 		);
 
 		$this->add_control(
 			'currency',
 			[
-				'label' => esc_html__( 'Currency', 'sola-donations' ),
+				'label' => esc_html__( 'Default Currency', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::SELECT,
 				'default' => 'USD',
 				'options' => [
@@ -242,24 +77,385 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'allow_user_currency',
+			[
+				'label' => esc_html__( 'Allow User to Choose Currency', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'no',
+			]
+		);
+
+		$this->add_control(
+			'recurring_toggle',
+			[
+				'label' => esc_html__( 'Enable Recurring Donations', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+		
+		$this->add_control(
+			'recurring_payment_day',
+			[
+				'label' => esc_html__( 'Recurring Payment Day', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SELECT,
+				'default' => '1',
+				'options' => array_combine( range( 1, 28 ), range( 1, 28 ) ),
+				'condition' => [
+					'recurring_toggle' => 'yes',
+				],
+			]
+		);
+
 		$this->end_controls_section();
 
-		// --- iFields Styling Section ---
+		// 2. Preset Amounts
 		$this->start_controls_section(
-			'ifields_style_section',
+			'section_preset_amounts',
 			[
-				'label' => esc_html__( 'Input Fields (Sola)', 'sola-donations' ),
+				'label' => esc_html__( 'Preset Amounts', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+			]
+		);
+
+		$repeater = new \Elementor\Repeater();
+
+		$repeater->add_control(
+			'amount_value',
+			[
+				'label' => esc_html__( 'Amount', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::NUMBER,
+				'default' => 18,
+				'min' => 1,
+			]
+		);
+
+		$this->add_control(
+			'repeater_amounts',
+			[
+				'label' => esc_html__( 'Donation Amounts', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::REPEATER,
+				'fields' => $repeater->get_controls(),
+				'default' => [
+					[ 'amount_value' => 18 ],
+					[ 'amount_value' => 36 ],
+					[ 'amount_value' => 72 ],
+					[ 'amount_value' => 180 ],
+				],
+				'title_field' => '{{{ amount_value }}}',
+			]
+		);
+
+		$this->add_control(
+			'enable_custom_amount',
+			[
+				'label' => esc_html__( 'Allow Custom Amount', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+
+		$this->end_controls_section();
+
+		// 3. Donor Information Fields
+		$this->start_controls_section(
+			'section_donor_info',
+			[
+				'label' => esc_html__( 'Donor Information', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+			]
+		);
+
+		$this->add_control(
+			'show_name',
+			[
+				'label' => esc_html__( 'Show Name Fields', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+
+		$this->add_control(
+			'show_email',
+			[
+				'label' => esc_html__( 'Show Email', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+
+		$this->add_control(
+			'show_phone',
+			[
+				'label' => esc_html__( 'Show Phone', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+
+		$this->add_control(
+			'show_address',
+			[
+				'label' => esc_html__( 'Show Address Fields', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+
+		$this->end_controls_section();
+		
+		// --- STYLE TAB ---
+
+		// 1. Form Container
+		$this->start_controls_section(
+			'style_container',
+			[
+				'label' => esc_html__( 'Form Container', 'sola-donations' ),
 				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
 			]
 		);
 
+		$this->add_control(
+			'container_bg_color',
+			[
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-wrapper' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			[
+				'name' => 'container_border',
+				'selector' => '{{WRAPPER}} .sola-donation-wrapper',
+			]
+		);
+
+		$this->add_control(
+			'container_border_radius',
+			[
+				'label' => esc_html__( 'Border Radius', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-wrapper' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Box_Shadow::get_type(),
+			[
+				'name' => 'container_box_shadow',
+				'selector' => '{{WRAPPER}} .sola-donation-wrapper',
+			]
+		);
+
+		$this->add_responsive_control(
+			'container_padding',
+			[
+				'label' => esc_html__( 'Padding', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', 'em', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-wrapper' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
+		$this->end_controls_section();
+
+		// 2. Typography & Labels
+		$this->start_controls_section(
+			'style_labels',
+			[
+				'label' => esc_html__( 'Typography & Labels', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			[
+				'name' => 'labels_typography',
+				'selector' => '{{WRAPPER}} label',
+			]
+		);
+
+		$this->add_control(
+			'labels_color',
+			[
+				'label' => esc_html__( 'Label Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} label' => 'color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->end_controls_section();
+
+		// 3. Input Fields (Standard)
+		$this->start_controls_section(
+			'style_inputs',
+			[
+				'label' => esc_html__( 'Input Fields (Standard)', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			]
+		);
+
+		$this->add_control(
+			'input_bg_color',
+			[
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'default' => '#ffffff',
+				'selectors' => [
+					'{{WRAPPER}} input[type="text"], {{WRAPPER}} input[type="email"], {{WRAPPER}} input[type="tel"], {{WRAPPER}} input[type="number"], {{WRAPPER}} select' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_control(
+			'input_text_color',
+			[
+				'label' => esc_html__( 'Text Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'default' => '#333333',
+				'selectors' => [
+					'{{WRAPPER}} input[type="text"], {{WRAPPER}} input[type="email"], {{WRAPPER}} input[type="tel"], {{WRAPPER}} input[type="number"], {{WRAPPER}} select' => 'color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			[
+				'name' => 'input_typography',
+				'selector' => '{{WRAPPER}} input[type="text"], {{WRAPPER}} input[type="email"], {{WRAPPER}} input[type="tel"], {{WRAPPER}} input[type="number"], {{WRAPPER}} select',
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			[
+				'name' => 'input_border',
+				'selector' => '{{WRAPPER}} input[type="text"], {{WRAPPER}} input[type="email"], {{WRAPPER}} input[type="tel"], {{WRAPPER}} input[type="number"], {{WRAPPER}} select',
+			]
+		);
+
+		$this->add_control(
+			'input_border_radius',
+			[
+				'label' => esc_html__( 'Border Radius', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} input[type="text"], {{WRAPPER}} input[type="email"], {{WRAPPER}} input[type="tel"], {{WRAPPER}} input[type="number"], {{WRAPPER}} select' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'input_padding',
+			[
+				'label' => esc_html__( 'Padding', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', 'em', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} input[type="text"], {{WRAPPER}} input[type="email"], {{WRAPPER}} input[type="tel"], {{WRAPPER}} input[type="number"], {{WRAPPER}} select' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
+		$this->end_controls_section();
+
+		// 4. Sola iFields (Credit Card Frames)
+		$this->start_controls_section(
+			'style_ifields',
+			[
+				'label' => esc_html__( 'Sola iFields (Credit Card)', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			]
+		);
+		
+		$this->add_control(
+			'ifield_container_heading',
+			[
+				'label' => esc_html__( 'Container Styling', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::HEADING,
+			]
+		);
+
+		$this->add_control(
+			'ifield_bg_color',
+			[
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'default' => '#ffffff',
+				'selectors' => [
+					'{{WRAPPER}} .sola-ifield-container' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			[
+				'name' => 'ifield_border',
+				'selector' => '{{WRAPPER}} .sola-ifield-container',
+			]
+		);
+
+		$this->add_control(
+			'ifield_border_radius',
+			[
+				'label' => esc_html__( 'Border Radius', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} .sola-ifield-container' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+		
+		$this->add_control(
+			'ifield_internal_heading',
+			[
+				'label' => esc_html__( 'Internal Text Styling (Passed to Sola)', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::HEADING,
+				'separator' => 'before',
+			]
+		);
+
+		$this->add_control(
+			'ifield_text_color',
+			[
+				'label' => esc_html__( 'Text Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'default' => '#333333',
+			]
+		);
+		
+		$this->add_control(
+			'ifield_placeholder_color',
+			[
+				'label' => esc_html__( 'Placeholder Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'default' => '#999999',
+			]
+		);
+		
 		$this->add_control(
 			'ifield_font_family',
 			[
 				'label' => esc_html__( 'Font Family', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::FONT,
 				'default' => "'Helvetica Neue', Helvetica, Arial, sans-serif",
-				'selector' => '{{WRAPPER}} .sola-ifield', // Not directly applied, but good for preview if we could
 			]
 		);
 
@@ -282,131 +478,302 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 			]
 		);
 
+		$this->end_controls_section();
+
+		// 5. Amount Buttons
+		$this->start_controls_section(
+			'style_amount_buttons',
+			[
+				'label' => esc_html__( 'Amount Buttons', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			[
+				'name' => 'amount_btn_typography',
+				'selector' => '{{WRAPPER}} .sola-amount-btn',
+			]
+		);
+
+		$this->start_controls_tabs( 'tabs_amount_btn_style' );
+
+		$this->start_controls_tab(
+			'tab_amount_btn_normal',
+			[
+				'label' => esc_html__( 'Normal', 'sola-donations' ),
+			]
+		);
+
 		$this->add_control(
-			'ifield_color',
+			'amount_btn_color',
 			[
 				'label' => esc_html__( 'Text Color', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::COLOR,
-				'default' => '#333333',
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn' => 'color: {{VALUE}}',
+				],
 			]
 		);
 
 		$this->add_control(
-			'ifield_bg_color',
+			'amount_btn_bg_color',
 			[
 				'label' => esc_html__( 'Background Color', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::COLOR,
-				'default' => '#ffffff',
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+		
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			[
+				'name' => 'amount_btn_border',
+				'selector' => '{{WRAPPER}} .sola-amount-btn',
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->start_controls_tab(
+			'tab_amount_btn_hover',
+			[
+				'label' => esc_html__( 'Hover', 'sola-donations' ),
 			]
 		);
 
 		$this->add_control(
-			'ifield_border_color',
+			'amount_btn_hover_color',
+			[
+				'label' => esc_html__( 'Text Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn:hover' => 'color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_control(
+			'amount_btn_hover_bg_color',
+			[
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn:hover' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+		
+		$this->add_control(
+			'amount_btn_hover_border_color',
 			[
 				'label' => esc_html__( 'Border Color', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::COLOR,
-				'default' => '#cccccc',
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn:hover' => 'border-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->start_controls_tab(
+			'tab_amount_btn_selected',
+			[
+				'label' => esc_html__( 'Selected', 'sola-donations' ),
 			]
 		);
 
 		$this->add_control(
-			'ifield_placeholder_color',
+			'amount_btn_selected_color',
 			[
-				'label' => esc_html__( 'Placeholder Color', 'sola-donations' ),
+				'label' => esc_html__( 'Text Color', 'sola-donations' ),
 				'type' => \Elementor\Controls_Manager::COLOR,
-				'default' => '#999999',
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn.selected' => 'color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->add_control(
+			'amount_btn_selected_bg_color',
+			[
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn.selected' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+		
+		$this->add_control(
+			'amount_btn_selected_border_color',
+			[
+				'label' => esc_html__( 'Border Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn.selected' => 'border-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->end_controls_tabs();
+
+		$this->add_control(
+			'amount_btn_border_radius',
+			[
+				'label' => esc_html__( 'Border Radius', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} .sola-amount-btn' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+		
+		$this->add_responsive_control(
+			'amount_btn_gap',
+			[
+				'label' => esc_html__( 'Gap', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::SLIDER,
+				'range' => [
+					'px' => [
+						'max' => 50,
+					],
+				],
+				'selectors' => [
+					'{{WRAPPER}} .sola-amounts-grid' => 'gap: {{SIZE}}{{UNIT}};',
+				],
 			]
 		);
 
 		$this->end_controls_section();
 
-		// --- Wallets Section ---
+		// 6. Submit Button
 		$this->start_controls_section(
-			'wallets_section',
+			'style_submit_button',
 			[
-				'label' => esc_html__( 'Wallets (Google/Apple Pay)', 'sola-donations' ),
-				'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+				'label' => esc_html__( 'Submit Button', 'sola-donations' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			]
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			[
+				'name' => 'submit_btn_typography',
+				'selector' => '{{WRAPPER}} .sola-donation-btn',
+			]
+		);
+
+		$this->start_controls_tabs( 'tabs_submit_btn_style' );
+
+		$this->start_controls_tab(
+			'tab_submit_btn_normal',
+			[
+				'label' => esc_html__( 'Normal', 'sola-donations' ),
 			]
 		);
 
 		$this->add_control(
-			'enable_wallets',
+			'submit_btn_color',
 			[
-				'label' => esc_html__( 'Enable Google/Apple Pay', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'default' => 'no',
-			]
-		);
-
-		$this->end_controls_section();
-
-		// --- Actions After Submit Section ---
-		$this->start_controls_section(
-			'actions_section',
-			[
-				'label' => esc_html__( 'Actions After Success', 'sola-donations' ),
-				'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
-			]
-		);
-
-		$this->add_control(
-			'redirect_after_success',
-			[
-				'label' => esc_html__( 'Redirect', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'default' => 'no',
-			]
-		);
-
-		$this->add_control(
-			'redirect_url',
-			[
-				'label' => esc_html__( 'Redirect URL', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::URL,
-				'condition' => [
-					'redirect_after_success' => 'yes',
+				'label' => esc_html__( 'Text Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-btn' => 'color: {{VALUE}}',
 				],
 			]
 		);
 
 		$this->add_control(
-			'enable_webhook',
+			'submit_btn_bg_color',
 			[
-				'label' => esc_html__( 'Webhook', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'default' => 'no',
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-btn' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->start_controls_tab(
+			'tab_submit_btn_hover',
+			[
+				'label' => esc_html__( 'Hover', 'sola-donations' ),
 			]
 		);
 
 		$this->add_control(
-			'webhook_url',
+			'submit_btn_hover_color',
 			[
-				'label' => esc_html__( 'Webhook URL', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::TEXT,
-				'condition' => [
-					'enable_webhook' => 'yes',
+				'label' => esc_html__( 'Text Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-btn:hover' => 'color: {{VALUE}}',
 				],
 			]
 		);
 
 		$this->add_control(
-			'email_admin',
+			'submit_btn_hover_bg_color',
 			[
-				'label' => esc_html__( 'Email Admin', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::SWITCHER,
-				'default' => 'no',
+				'label' => esc_html__( 'Background Color', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-btn:hover' => 'background-color: {{VALUE}}',
+				],
+			]
+		);
+
+		$this->end_controls_tab();
+
+		$this->end_controls_tabs();
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			[
+				'name' => 'submit_btn_border',
+				'selector' => '{{WRAPPER}} .sola-donation-btn',
 			]
 		);
 
 		$this->add_control(
-			'admin_email_address',
+			'submit_btn_border_radius',
 			[
-				'label' => esc_html__( 'Admin Email', 'sola-donations' ),
-				'type' => \Elementor\Controls_Manager::TEXT,
-				'default' => get_option( 'admin_email' ),
-				'condition' => [
-					'email_admin' => 'yes',
+				'label' => esc_html__( 'Border Radius', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-btn' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'submit_btn_padding',
+			[
+				'label' => esc_html__( 'Padding', 'sola-donations' ),
+				'type' => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', 'em', '%' ],
+				'selectors' => [
+					'{{WRAPPER}} .sola-donation-btn' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+		
+		$this->add_group_control(
+			\Elementor\Group_Control_Box_Shadow::get_type(),
+			[
+				'name' => 'submit_btn_box_shadow',
+				'selector' => '{{WRAPPER}} .sola-donation-btn',
 			]
 		);
 
@@ -414,100 +781,138 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 
 	}
 
-	/**
-	 * Render widget output on the frontend.
-	 *
-	 * Written in PHP and outputting to the DOM.
-	 *
-	 * @since 1.0.0
-	 * @access protected
-	 */
 	protected function render() {
 		$settings = $this->get_settings_for_display();
-		$amounts = array_map('trim', explode(',', $settings['donation_amounts']));
 		
-		// Prepare iFields Styles
-		$ifields_styles = [
-			'font-family' => $settings['ifield_font_family'],
-			'font-size' => $settings['ifield_font_size']['size'] . $settings['ifield_font_size']['unit'],
-			'color' => $settings['ifield_color'],
-			'background-color' => $settings['ifield_bg_color'],
-			'border-color' => $settings['ifield_border_color'],
-			'placeholder-color' => $settings['ifield_placeholder_color'],
+		// Prepare Sola Styles for JS (passed to iFields)
+		$sola_styles = [
+			'fontFamily' => !empty($settings['ifield_font_family']) ? $settings['ifield_font_family'] : 'inherit',
+			'fontSize' => !empty($settings['ifield_font_size']['size']) ? $settings['ifield_font_size']['size'] . $settings['ifield_font_size']['unit'] : '14px',
+			'textColor' => $settings['ifield_text_color'],
+			'placeholderColor' => $settings['ifield_placeholder_color'],
 		];
 		
 		$widget_config = [
-			'donation_type' => $settings['donation_type'],
-			'recurring_day' => $settings['recurring_payment_day'],
-			'charge_immediately' => $settings['charge_immediately'],
+			'api_mode' => $settings['api_mode'],
 			'currency' => $settings['currency'],
-			'ifields_styles' => $ifields_styles,
-			'enable_wallets' => $settings['enable_wallets'],
-			'redirect' => $settings['redirect_after_success'],
-			'redirect_url' => $settings['redirect_url']['url'] ?? '',
-			'webhook' => $settings['enable_webhook'],
-			'webhook_url' => $settings['webhook_url'],
-			'email_admin' => $settings['email_admin'],
-			'admin_email' => $settings['admin_email_address'],
+			'allow_user_currency' => $settings['allow_user_currency'],
+			'recurring_enabled' => $settings['recurring_toggle'],
+			'recurring_day' => $settings['recurring_payment_day'],
 		];
 		?>
-		<div class="sola-donation-wrapper" data-sola-config="<?php echo esc_attr( json_encode( $widget_config ) ); ?>">
-			<?php if ( ! empty( $settings['form_title'] ) ) : ?>
-				<h3 class="sola-form-title"><?php echo esc_html( $settings['form_title'] ); ?></h3>
-			<?php endif; ?>
-
-			<div class="sola-amount-selector">
-				<?php foreach ( $amounts as $amount ) : ?>
-					<button type="button" class="sola-amount-btn" data-amount="<?php echo esc_attr( $amount ); ?>">
-						<?php echo esc_html( '$' . $amount ); ?>
-					</button>
-				<?php endforeach; ?>
+		<div class="sola-donation-wrapper" 
+			 data-sola-config="<?php echo esc_attr( json_encode( $widget_config ) ); ?>"
+			 data-sola-styles="<?php echo esc_attr( json_encode( $sola_styles ) ); ?>">
+			
+			<!-- Amounts Section -->
+			<div class="sola-amounts-grid">
+				<?php if ( $settings['repeater_amounts'] ) : ?>
+					<?php foreach ( $settings['repeater_amounts'] as $item ) : ?>
+						<button type="button" class="sola-amount-btn" data-amount="<?php echo esc_attr( $item['amount_value'] ); ?>">
+							<?php echo esc_html( '$' . $item['amount_value'] ); ?>
+						</button>
+					<?php endforeach; ?>
+				<?php endif; ?>
 				
-				<?php if ( 'yes' === $settings['show_custom_amount'] ) : ?>
+				<?php if ( 'yes' === $settings['enable_custom_amount'] ) : ?>
 					<div class="sola-custom-amount-wrapper">
-						<span class="currency-symbol"><?php echo esc_html( $settings['currency'] === 'ILS' ? '₪' : ($settings['currency'] === 'EUR' ? '€' : '$') ); ?></span>
 						<input type="number" class="sola-custom-amount" placeholder="<?php esc_attr_e( 'Other', 'sola-donations' ); ?>">
 					</div>
 				<?php endif; ?>
 			</div>
+			
+			<!-- Currency Selection (if enabled) -->
+			<?php if ( 'yes' === $settings['allow_user_currency'] ) : ?>
+				<div class="sola-currency-wrapper">
+					<label><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
+					<select class="sola-currency-select">
+						<option value="USD" <?php selected( $settings['currency'], 'USD' ); ?>>USD ($)</option>
+						<option value="ILS" <?php selected( $settings['currency'], 'ILS' ); ?>>ILS (₪)</option>
+						<option value="EUR" <?php selected( $settings['currency'], 'EUR' ); ?>>EUR (€)</option>
+					</select>
+				</div>
+			<?php endif; ?>
 
-			<?php if ( 'both' === $settings['donation_type'] ) : ?>
+			<!-- Recurring Toggle -->
+			<?php if ( 'yes' === $settings['recurring_toggle'] ) : ?>
 				<div class="sola-recurring-toggle">
 					<label>
 						<input type="checkbox" name="is_recurring" value="1">
 						<?php esc_html_e( 'Make this a monthly donation', 'sola-donations' ); ?>
 					</label>
 				</div>
-			<?php elseif ( 'recurring' === $settings['donation_type'] ) : ?>
-				<input type="hidden" name="is_recurring" value="1">
-				<p class="sola-recurring-notice"><?php esc_html_e( 'Monthly Donation', 'sola-donations' ); ?></p>
 			<?php endif; ?>
+			
+			<!-- Donor Information Fields -->
+			<div class="sola-donor-info">
+				<?php if ( 'yes' === $settings['show_name'] ) : ?>
+					<div class="sola-form-row">
+						<div class="sola-field-group">
+							<label><?php esc_html_e( 'First Name', 'sola-donations' ); ?></label>
+							<input type="text" name="first_name" required>
+						</div>
+						<div class="sola-field-group">
+							<label><?php esc_html_e( 'Last Name', 'sola-donations' ); ?></label>
+							<input type="text" name="last_name" required>
+						</div>
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( 'yes' === $settings['show_email'] ) : ?>
+					<div class="sola-field-group">
+						<label><?php esc_html_e( 'Email Address', 'sola-donations' ); ?></label>
+						<input type="email" name="email" required>
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( 'yes' === $settings['show_phone'] ) : ?>
+					<div class="sola-field-group">
+						<label><?php esc_html_e( 'Phone Number', 'sola-donations' ); ?></label>
+						<input type="tel" name="phone">
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( 'yes' === $settings['show_address'] ) : ?>
+					<div class="sola-field-group">
+						<label><?php esc_html_e( 'Street Address', 'sola-donations' ); ?></label>
+						<input type="text" name="address">
+					</div>
+					<div class="sola-form-row">
+						<div class="sola-field-group">
+							<label><?php esc_html_e( 'City', 'sola-donations' ); ?></label>
+							<input type="text" name="city">
+						</div>
+						<div class="sola-field-group">
+							<label><?php esc_html_e( 'Zip Code', 'sola-donations' ); ?></label>
+							<input type="text" name="zip">
+						</div>
+					</div>
+				<?php endif; ?>
+			</div>
 
-			<!-- Payment Fields Placeholder -->
+			<!-- Payment Fields (iFields) -->
 			<div id="sola-payment-fields-container">
 				<div class="sola-field-group">
 					<label><?php esc_html_e( 'Card Number', 'sola-donations' ); ?></label>
-					<iframe id="sola-ifield-card-number" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
+					<div id="sola-card-number" class="sola-ifield-container">
+						<iframe id="sola-ifield-card-number" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
+					</div>
 				</div>
-				<div class="sola-field-row">
+				<div class="sola-form-row">
 					<div class="sola-field-group">
 						<label><?php esc_html_e( 'Expiration', 'sola-donations' ); ?></label>
-						<iframe id="sola-ifield-exp" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
+						<div id="sola-expiry" class="sola-ifield-container">
+							<iframe id="sola-ifield-exp" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
+						</div>
 					</div>
 					<div class="sola-field-group">
 						<label><?php esc_html_e( 'CVV', 'sola-donations' ); ?></label>
-						<iframe id="sola-ifield-cvv" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
+						<div id="sola-cvv" class="sola-ifield-container">
+							<iframe id="sola-ifield-cvv" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
+						</div>
 					</div>
 				</div>
 			</div>
-			
-			<?php if ( 'yes' === $settings['enable_wallets'] ) : ?>
-				<div id="sola-wallets-container">
-					<!-- Wallet buttons will be injected here by Sola SDK or manual buttons -->
-					<button type="button" id="sola-google-pay-btn" class="sola-wallet-btn sola-google-pay">Google Pay</button>
-					<button type="button" id="sola-apple-pay-btn" class="sola-wallet-btn sola-apple-pay">Apple Pay</button>
-				</div>
-			<?php endif; ?>
 
 			<button type="button" id="sola-submit-btn" class="sola-donation-btn">
 				<?php esc_html_e( 'Donate Now', 'sola-donations' ); ?>
