@@ -19,9 +19,21 @@ jQuery(document).ready(function ($) {
     var config = widgetData.config;
     var elementorStyles = widgetData.styles;
 
+    if (config.debug_mode) {
+        console.log('Sola Init Started', config);
+        console.log('Sola Styles', elementorStyles);
+    }
+
     // --- Initialization ---
 
     if (typeof sola_vars !== 'undefined' && sola_vars.ifields_key) {
+
+        // Check if iField containers exist
+        if ($('#sola-card-number').length === 0) {
+            console.error('Sola Error: iField container #sola-card-number missing!');
+        } else {
+            if (config.debug_mode) console.log('Sola: Containers found, initializing SDK...');
+        }
 
         // Map Elementor Styles to Sola SDK Format
         var solaStyles = {
@@ -40,14 +52,20 @@ jQuery(document).ready(function ($) {
         };
 
         // Initialize Sola
-        setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
+        try {
+            setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
 
-        // Load iFields
-        if ($('#sola-ifield-card-number').length) {
-            loadIField('sola-ifield-card-number', 'card-number', solaStyles);
-            loadIField('sola-ifield-exp', 'exp', solaStyles);
-            loadIField('sola-ifield-cvv', 'cvv', solaStyles);
+            // Load iFields
+            if ($('#sola-ifield-card-number').length) {
+                loadIField('sola-ifield-card-number', 'card-number', solaStyles);
+                loadIField('sola-ifield-exp', 'exp', solaStyles);
+                loadIField('sola-ifield-cvv', 'cvv', solaStyles);
+            }
+        } catch (e) {
+            console.error('Sola SDK Init Failed:', e);
         }
+    } else {
+        console.error('Sola Error: sola_vars or ifields_key missing.');
     }
 
     // --- Event Listeners ---
@@ -101,6 +119,8 @@ jQuery(document).ready(function ($) {
             var token = '';
             var data = arguments[0];
 
+            if (config.debug_mode) console.log('Sola Token Success:', data);
+
             if (data && data.xToken) {
                 token = data.xToken;
             } else {
@@ -121,6 +141,7 @@ jQuery(document).ready(function ($) {
 
         }, function (data) {
             // Error Callback
+            if (config.debug_mode) console.error('Sola Token Error:', data);
             $btn.prop('disabled', false).text('Donate Now');
             $('#sola-message-container').html('<p class="sola-error">' + (data.errorMessage || 'Error generating token') + '</p>');
         });
@@ -135,6 +156,11 @@ jQuery(document).ready(function ($) {
     }
 
     function getSelectedCurrency() {
+        // Check for explicit select first
+        if ($('#sola_currency_select').length > 0) {
+            return $('#sola_currency_select').val();
+        }
+        // Fallback to class selector
         if ($('.sola-currency-select').length > 0) {
             return $('.sola-currency-select').val();
         }
@@ -145,6 +171,8 @@ jQuery(document).ready(function ($) {
         var $btn = $('#sola-submit-btn');
         var amount = getDonationAmount();
         var currentCurrency = getSelectedCurrency();
+
+        if (config.debug_mode) console.log('Processing Donation:', { amount: amount, currency: currentCurrency });
 
         // Collect Donor Data
         var donorData = {

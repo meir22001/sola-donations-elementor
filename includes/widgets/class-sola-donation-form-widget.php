@@ -798,6 +798,7 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 			'allow_user_currency' => $settings['allow_user_currency'],
 			'recurring_enabled' => $settings['recurring_toggle'],
 			'recurring_day' => $settings['recurring_payment_day'],
+			'debug_mode' => true, // Force debug mode
 		];
 		?>
 		<div class="sola-donation-wrapper" 
@@ -821,11 +822,11 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 				<?php endif; ?>
 			</div>
 			
-			<!-- Currency Selection (if enabled) -->
+			<!-- Currency Selection (Explicit Check) -->
 			<?php if ( 'yes' === $settings['allow_user_currency'] ) : ?>
 				<div class="sola-currency-wrapper">
-					<label><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
-					<select class="sola-currency-select">
+					<label for="sola_currency_select"><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
+					<select id="sola_currency_select" class="sola-currency-select" name="donation_currency">
 						<option value="USD" <?php selected( $settings['currency'], 'USD' ); ?>>USD ($)</option>
 						<option value="ILS" <?php selected( $settings['currency'], 'ILS' ); ?>>ILS (₪)</option>
 						<option value="EUR" <?php selected( $settings['currency'], 'EUR' ); ?>>EUR (€)</option>
@@ -890,26 +891,20 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 				<?php endif; ?>
 			</div>
 
-			<!-- Payment Fields (iFields) -->
+			<!-- Payment Fields (iFields) - Explicit IDs -->
 			<div id="sola-payment-fields-container">
 				<div class="sola-field-group">
 					<label><?php esc_html_e( 'Card Number', 'sola-donations' ); ?></label>
-					<div id="sola-card-number" class="sola-ifield-container">
-						<iframe id="sola-ifield-card-number" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
-					</div>
+					<div id="sola-card-number" class="sola-ifield-container"></div>
 				</div>
 				<div class="sola-form-row">
 					<div class="sola-field-group">
 						<label><?php esc_html_e( 'Expiration', 'sola-donations' ); ?></label>
-						<div id="sola-expiry" class="sola-ifield-container">
-							<iframe id="sola-ifield-exp" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
-						</div>
+						<div id="sola-expiry" class="sola-ifield-container"></div>
 					</div>
 					<div class="sola-field-group">
 						<label><?php esc_html_e( 'CVV', 'sola-donations' ); ?></label>
-						<div id="sola-cvv" class="sola-ifield-container">
-							<iframe id="sola-ifield-cvv" class="sola-ifield" src="" frameborder="0" scrolling="no"></iframe>
-						</div>
+						<div id="sola-cvv" class="sola-ifield-container"></div>
 					</div>
 				</div>
 			</div>

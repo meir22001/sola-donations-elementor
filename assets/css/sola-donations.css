@@ -129,14 +129,17 @@
 }
 
 .sola-ifield-container {
-    min-height: 45px;
-    /* CRITICAL: Prevents invisible fields */
-    border: 1px solid #ccc;
-    background-color: #fff;
+    min-height: 50px !important;
+    /* Force visibility */
+    background-color: #ffffff;
+    border: 1px solid #e1e1e1;
+    /* Fallback border */
     border-radius: 4px;
+    margin-bottom: 15px;
+    display: block;
+    width: 100%;
     position: relative;
     overflow: hidden;
-    display: block;
 }
 
 .sola-ifield {
