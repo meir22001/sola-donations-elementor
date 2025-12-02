@@ -20,87 +20,85 @@ jQuery(document).ready(function ($) {
     var elementorStyles = widgetData.styles;
 
     if (config.debug_mode) {
-        console.log('Sola Init Started', config);
-        console.log('Sola Styles', elementorStyles);
+        console.log('Sola Init Started (Tailwind Mode)', config);
     }
 
     // --- Initialization ---
 
     if (typeof sola_vars !== 'undefined' && sola_vars.ifields_key) {
 
-        // Wait for SDK to be ready if needed, or just init
-        // Standard Sola SDK puts 'setAccount' on window.
         if (typeof setAccount === 'function') {
             try {
-                if (config.debug_mode) console.log('Sola: Calling setAccount...');
-
                 setAccount(sola_vars.ifields_key, 'sola-donations', '1.0');
 
-                // Apply Styles using setIfieldStyle
-                // Sola SDK expects specific style keys.
-                // We map Elementor styles to Sola keys.
-
+                // Tailwind Dark Mode Styles for iFields
                 var fontStyle = {
-                    'font-family': elementorStyles.fontFamily || 'inherit',
-                    'font-size': elementorStyles.fontSize || '14px',
-                    'color': elementorStyles.textColor || '#333'
+                    'font-family': 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                    'font-size': '16px',
+                    'color': '#ffffff' // White text
                 };
 
                 var inputStyle = {
-                    'color': elementorStyles.textColor || '#333',
-                    'font-size': elementorStyles.fontSize || '14px'
+                    'color': '#ffffff',
+                    'font-size': '16px'
                 };
 
                 var placeholderStyle = {
-                    'color': elementorStyles.placeholderColor || '#999'
+                    'color': '#94a3b8' // Slate-400
                 };
-
-                // Apply to all fields
-                // Note: Sola automatically finds iframes based on IDs if they exist, 
-                // OR it injects them into divs with specific IDs.
-                // The standard IDs are usually: 'ifields_card_number', 'ifields_expiration_date', 'ifields_cvv'
-                // OR we can specify them.
-                // Since we are using divs with IDs in the widget, Sola should find them if we use standard IDs.
-                // If we use custom IDs, we might need to configure Sola.
-                // However, `setAccount` initializes the library.
-                // The library then looks for containers.
-
-                // Let's assume we update the Widget to use standard IDs:
-                // ifields_card_number, ifields_expiration_date, ifields_cvv
 
                 setIfieldStyle('body', fontStyle);
                 setIfieldStyle('input', inputStyle);
                 setIfieldStyle('::placeholder', placeholderStyle);
 
-                if (config.debug_mode) console.log('Sola: Styles applied.');
+                if (config.debug_mode) console.log('Sola: Dark mode styles applied.');
 
             } catch (e) {
                 console.error('Sola SDK Init Failed:', e);
             }
         } else {
-            console.error('Sola Error: setAccount function not found. SDK not loaded?');
+            console.error('Sola Error: setAccount function not found.');
         }
 
     } else {
         console.error('Sola Error: sola_vars or ifields_key missing.');
     }
 
-    // --- Event Listeners ---
+    // --- UI Logic (Tailwind Classes) ---
 
     // Amount Selection
     $('.sola-amount-btn').on('click', function () {
-        $('.sola-amount-btn').removeClass('selected');
-        $(this).addClass('selected');
+        // Reset all buttons to default state
+        $('.sola-amount-btn').removeClass('border-rose-400 bg-rose-400/10 text-rose-400 selected')
+            .addClass('border-slate-700 text-slate-300');
+
+        // Set selected button state
+        $(this).removeClass('border-slate-700 text-slate-300')
+            .addClass('border-rose-400 bg-rose-400/10 text-rose-400 selected');
+
         $('.sola-custom-amount').val(''); // Clear custom amount
     });
 
     $('.sola-custom-amount').on('focus', function () {
-        $('.sola-amount-btn').removeClass('selected');
+        // Deselect all buttons
+        $('.sola-amount-btn').removeClass('border-rose-400 bg-rose-400/10 text-rose-400 selected')
+            .addClass('border-slate-700 text-slate-300');
     });
 
-    // Currency Selection (Sync with hidden field if needed, or just read value)
-    $('#sola_currency_select').on('change', function () {
-        if (config.debug_mode) console.log('Currency changed to:', $(this).val());
+    // Frequency Toggle
+    $('.sola-frequency-btn').on('click', function () {
+        var frequency = $(this).data('frequency');
+
+        // Update hidden input
+        $('#sola_is_recurring').val(frequency === 'monthly' ? '1' : '0');
+
+        // Reset all buttons
+        $('.sola-frequency-btn').removeClass('text-white bg-slate-700 shadow-sm')
+            .addClass('text-slate-400 hover:text-white');
+
+        // Set active button
+        $(this).removeClass('text-slate-400 hover:text-white')
+            .addClass('text-white bg-slate-700 shadow-sm');
     });
 
     // --- Submission Logic ---
@@ -116,14 +114,14 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        // Basic Validation for Required Fields
+        // Basic Validation
         var isValid = true;
         $('.sola-donor-info input[required]').each(function () {
             if ($(this).val() === '') {
                 isValid = false;
-                $(this).css('border-color', 'red');
+                $(this).addClass('border-rose-500').removeClass('border-slate-700');
             } else {
-                $(this).css('border-color', '#ccc');
+                $(this).removeClass('border-rose-500').addClass('border-slate-700');
             }
         });
 
@@ -132,23 +130,20 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        $btn.prop('disabled', true).text('Processing...');
+        $btn.prop('disabled', true).html('<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...');
         $('#sola-message-container').html('');
 
         // Get Token from Sola
-        // Sola SDK `getTokens` function
         if (typeof getTokens === 'function') {
             getTokens(function () {
                 // Success Callback
                 var token = '';
                 var data = arguments[0];
 
-                if (config.debug_mode) console.log('Sola Token Success:', data);
-
                 if (data && data.xToken) {
                     token = data.xToken;
                 } else {
-                    // Fallback: Try to find it in the DOM (Standard ID)
+                    // Fallback for standard IDs
                     try {
                         token = document.getElementById('ifields_card_number').contentWindow.document.getElementById('token').value;
                     } catch (e) {
@@ -160,19 +155,19 @@ jQuery(document).ready(function ($) {
                     processDonation(token);
                 } else {
                     $btn.prop('disabled', false).text('Donate Now');
-                    $('#sola-message-container').html('<p class="sola-error">Error: Could not retrieve payment token.</p>');
+                    $('#sola-message-container').html('<p class="text-rose-400 mt-2">Error: Could not retrieve payment token.</p>');
                 }
 
             }, function (data) {
                 // Error Callback
                 if (config.debug_mode) console.error('Sola Token Error:', data);
                 $btn.prop('disabled', false).text('Donate Now');
-                $('#sola-message-container').html('<p class="sola-error">' + (data.errorMessage || 'Error generating token') + '</p>');
+                $('#sola-message-container').html('<p class="text-rose-400 mt-2">' + (data.errorMessage || 'Error generating token') + '</p>');
             });
         } else {
             console.error('Sola Error: getTokens function not found.');
             $btn.prop('disabled', false).text('Donate Now');
-            $('#sola-message-container').html('<p class="sola-error">Payment system error.</p>');
+            $('#sola-message-container').html('<p class="text-rose-400 mt-2">Payment system error.</p>');
         }
     });
 
@@ -185,13 +180,8 @@ jQuery(document).ready(function ($) {
     }
 
     function getSelectedCurrency() {
-        // Check for explicit select first
         if ($('#sola_currency_select').length > 0) {
             return $('#sola_currency_select').val();
-        }
-        // Fallback to class selector
-        if ($('.sola-currency-select').length > 0) {
-            return $('.sola-currency-select').val();
         }
         return config.currency || 'USD';
     }
@@ -200,8 +190,6 @@ jQuery(document).ready(function ($) {
         var $btn = $('#sola-submit-btn');
         var amount = getDonationAmount();
         var currentCurrency = getSelectedCurrency();
-
-        if (config.debug_mode) console.log('Processing Donation:', { amount: amount, currency: currentCurrency });
 
         // Collect Donor Data
         var donorData = {
@@ -215,10 +203,7 @@ jQuery(document).ready(function ($) {
         };
 
         // Recurring Logic
-        var isRecurring = false;
-        if (config.recurring_enabled === 'yes') {
-            isRecurring = $('input[name="is_recurring"]').is(':checked');
-        }
+        var isRecurring = $('#sola_is_recurring').val() === '1';
 
         $.ajax({
             url: sola_vars.ajax_url,
@@ -235,20 +220,19 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 if (response.success) {
-                    $('#sola-message-container').html('<p class="sola-success">' + response.data.message + '</p>');
+                    $('#sola-message-container').html('<p class="text-green-400 mt-2">' + response.data.message + '</p>');
                     $btn.text('Donation Successful');
 
-                    // Optional: Redirect
                     if (response.data.redirect_url) {
                         window.location.href = response.data.redirect_url;
                     }
                 } else {
-                    $('#sola-message-container').html('<p class="sola-error">' + response.data.message + '</p>');
+                    $('#sola-message-container').html('<p class="text-rose-400 mt-2">' + response.data.message + '</p>');
                     $btn.prop('disabled', false).text('Donate Now');
                 }
             },
             error: function () {
-                $('#sola-message-container').html('<p class="sola-error">Server error. Please try again.</p>');
+                $('#sola-message-container').html('<p class="text-rose-400 mt-2">Server error. Please try again.</p>');
                 $btn.prop('disabled', false).text('Donate Now');
             }
         });

@@ -784,12 +784,15 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 	protected function render() {
 		$settings = $this->get_settings_for_display();
 		
-		// Prepare Sola Styles for JS (passed to iFields)
+		// Enqueue Tailwind CSS (CDN for immediate usage)
+		wp_enqueue_style( 'tailwind-css', 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css', [], '2.2.19' );
+		
+		// Prepare Sola Styles for JS (Dark Mode)
 		$sola_styles = [
-			'fontFamily' => !empty($settings['ifield_font_family']) ? $settings['ifield_font_family'] : 'inherit',
-			'fontSize' => !empty($settings['ifield_font_size']['size']) ? $settings['ifield_font_size']['size'] . $settings['ifield_font_size']['unit'] : '14px',
-			'textColor' => $settings['ifield_text_color'],
-			'placeholderColor' => $settings['ifield_placeholder_color'],
+			'fontFamily' => 'inherit',
+			'fontSize' => '16px',
+			'textColor' => '#ffffff', // White text for dark mode
+			'placeholderColor' => '#94a3b8', // Slate-400
 		];
 		
 		$widget_config = [
@@ -798,123 +801,129 @@ class Sola_Donation_Form_Widget extends \Elementor\Widget_Base {
 			'allow_user_currency' => $settings['allow_user_currency'],
 			'recurring_enabled' => $settings['recurring_toggle'],
 			'recurring_day' => $settings['recurring_payment_day'],
-			'debug_mode' => true, // Force debug mode
+			'debug_mode' => true,
 		];
 		?>
-		<div class="sola-donation-wrapper" 
+		<div class="sola-donation-wrapper w-full max-w-md mx-auto bg-slate-900 rounded-3xl shadow-2xl overflow-hidden font-sans" 
 			 data-sola-config="<?php echo esc_attr( json_encode( $widget_config ) ); ?>"
 			 data-sola-styles="<?php echo esc_attr( json_encode( $sola_styles ) ); ?>">
 			
-			<!-- Amounts Section -->
-			<div class="sola-amounts-grid">
-				<?php if ( $settings['repeater_amounts'] ) : ?>
-					<?php foreach ( $settings['repeater_amounts'] as $item ) : ?>
-						<button type="button" class="sola-amount-btn" data-amount="<?php echo esc_attr( $item['amount_value'] ); ?>">
-							<?php echo esc_html( '$' . $item['amount_value'] ); ?>
+			<!-- Header -->
+			<div class="bg-slate-800/50 p-6 text-center border-b border-slate-700">
+				<h2 class="text-2xl font-bold text-white"><?php echo esc_html( $settings['form_title'] ); ?></h2>
+				<p class="text-slate-400 text-sm mt-1"><?php esc_html_e( 'Secure Donation', 'sola-donations' ); ?></p>
+			</div>
+
+			<div class="p-6 space-y-6">
+				
+				<!-- Frequency Toggle -->
+				<?php if ( 'yes' === $settings['recurring_toggle'] ) : ?>
+					<div class="flex bg-slate-800 rounded-xl p-1 border border-slate-700">
+						<button type="button" class="sola-frequency-btn w-1/2 py-2 rounded-lg text-sm font-medium transition-all text-white bg-slate-700 shadow-sm" data-frequency="once">
+							<?php esc_html_e( 'Give Once', 'sola-donations' ); ?>
 						</button>
-					<?php endforeach; ?>
+						<button type="button" class="sola-frequency-btn w-1/2 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white" data-frequency="monthly">
+							<?php esc_html_e( 'Monthly', 'sola-donations' ); ?>
+						</button>
+						<input type="hidden" name="is_recurring" id="sola_is_recurring" value="0">
+					</div>
 				<?php endif; ?>
-				
+
+				<!-- Amounts Grid -->
+				<div class="grid grid-cols-3 gap-3">
+					<?php if ( $settings['repeater_amounts'] ) : ?>
+						<?php foreach ( $settings['repeater_amounts'] as $index => $item ) : ?>
+							<button type="button" class="sola-amount-btn py-3 px-4 rounded-xl border-2 border-slate-700 text-slate-300 font-semibold hover:border-rose-400 hover:text-rose-400 transition-all <?php echo $index === 1 ? 'border-rose-400 bg-rose-400/10 text-rose-400 selected' : ''; ?>" data-amount="<?php echo esc_attr( $item['amount_value'] ); ?>">
+								$<?php echo esc_html( $item['amount_value'] ); ?>
+							</button>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</div>
+
+				<!-- Custom Amount -->
 				<?php if ( 'yes' === $settings['enable_custom_amount'] ) : ?>
-					<div class="sola-custom-amount-wrapper">
-						<input type="number" class="sola-custom-amount" placeholder="<?php esc_attr_e( 'Other', 'sola-donations' ); ?>">
+					<div class="relative">
+						<span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">$</span>
+						<input type="number" class="sola-custom-amount w-full bg-slate-800 border-2 border-slate-700 rounded-xl pl-8 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 transition-all" placeholder="<?php esc_attr_e( 'Enter custom amount', 'sola-donations' ); ?>">
 					</div>
 				<?php endif; ?>
-			</div>
-			
-			<!-- Currency Selection (Explicit Check) -->
-			<?php if ( 'yes' === $settings['allow_user_currency'] ) : ?>
-				<div class="sola-form-row sola-currency-row">
-					<div class="sola-field-group">
-						<label for="sola_currency_select"><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
-						<select id="sola_currency_select" class="sola-currency-select" name="donation_currency">
-							<option value="USD" <?php selected( $settings['currency'], 'USD' ); ?>>$ (USD)</option>
-							<option value="ILS" <?php selected( $settings['currency'], 'ILS' ); ?>>₪ (ILS)</option>
-							<option value="EUR" <?php selected( $settings['currency'], 'EUR' ); ?>>€ (EUR)</option>
+
+				<!-- Currency Selection -->
+				<?php if ( 'yes' === $settings['allow_user_currency'] ) : ?>
+					<div class="relative">
+						<label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider"><?php esc_html_e( 'Currency', 'sola-donations' ); ?></label>
+						<select id="sola_currency_select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-400 transition-all appearance-none">
+							<option value="USD" <?php selected( $settings['currency'], 'USD' ); ?>>USD ($)</option>
+							<option value="ILS" <?php selected( $settings['currency'], 'ILS' ); ?>>ILS (₪)</option>
+							<option value="EUR" <?php selected( $settings['currency'], 'EUR' ); ?>>EUR (€)</option>
 						</select>
+						<div class="absolute right-4 top-[38px] pointer-events-none text-slate-400">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+						</div>
 					</div>
-				</div>
-			<?php endif; ?>
+				<?php endif; ?>
 
-			<!-- Recurring Toggle -->
-			<?php if ( 'yes' === $settings['recurring_toggle'] ) : ?>
-				<div class="sola-recurring-toggle">
-					<label>
-						<input type="checkbox" name="is_recurring" value="1">
-						<?php esc_html_e( 'Make this a monthly donation', 'sola-donations' ); ?>
-					</label>
+				<!-- Personal Info -->
+				<div class="space-y-4 pt-4 border-t border-slate-700">
+					<h3 class="text-sm font-medium text-slate-400 uppercase tracking-wider"><?php esc_html_e( 'Personal Info', 'sola-donations' ); ?></h3>
+					
+					<div class="grid grid-cols-2 gap-4">
+						<input type="text" name="first_name" placeholder="First Name" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all" required>
+						<input type="text" name="last_name" placeholder="Last Name" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all" required>
+					</div>
+					
+					<input type="email" name="email" placeholder="Email Address" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all" required>
+					
+					<?php if ( 'yes' === $settings['show_phone'] ) : ?>
+						<input type="tel" name="phone" placeholder="Phone Number" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all">
+					<?php endif; ?>
+					
+					<?php if ( 'yes' === $settings['show_address'] ) : ?>
+						<input type="text" name="address" placeholder="Street Address" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all">
+						<div class="grid grid-cols-2 gap-4">
+							<input type="text" name="city" placeholder="City" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all">
+							<input type="text" name="zip" placeholder="Zip Code" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-rose-400 transition-all">
+						</div>
+					<?php endif; ?>
 				</div>
-			<?php endif; ?>
-			
-			<!-- Donor Information Fields -->
-			<div class="sola-donor-info">
-				<?php if ( 'yes' === $settings['show_name'] ) : ?>
-					<div class="sola-form-row">
-						<div class="sola-field-group">
-							<label><?php esc_html_e( 'First Name', 'sola-donations' ); ?></label>
-							<input type="text" name="first_name" required>
-						</div>
-						<div class="sola-field-group">
-							<label><?php esc_html_e( 'Last Name', 'sola-donations' ); ?></label>
-							<input type="text" name="last_name" required>
-						</div>
-					</div>
-				<?php endif; ?>
-				
-				<?php if ( 'yes' === $settings['show_email'] ) : ?>
-					<div class="sola-field-group">
-						<label><?php esc_html_e( 'Email Address', 'sola-donations' ); ?></label>
-						<input type="email" name="email" required>
-					</div>
-				<?php endif; ?>
-				
-				<?php if ( 'yes' === $settings['show_phone'] ) : ?>
-					<div class="sola-field-group">
-						<label><?php esc_html_e( 'Phone Number', 'sola-donations' ); ?></label>
-						<input type="tel" name="phone">
-					</div>
-				<?php endif; ?>
-				
-				<?php if ( 'yes' === $settings['show_address'] ) : ?>
-					<div class="sola-field-group">
-						<label><?php esc_html_e( 'Street Address', 'sola-donations' ); ?></label>
-						<input type="text" name="address">
-					</div>
-					<div class="sola-form-row">
-						<div class="sola-field-group">
-							<label><?php esc_html_e( 'City', 'sola-donations' ); ?></label>
-							<input type="text" name="city">
-						</div>
-						<div class="sola-field-group">
-							<label><?php esc_html_e( 'Zip Code', 'sola-donations' ); ?></label>
-							<input type="text" name="zip">
-						</div>
-					</div>
-				<?php endif; ?>
-			</div>
 
-			<!-- Payment Fields (iFields) - Standard IDs -->
-			<div id="sola-payment-fields-container">
-				<div class="sola-field-group">
-					<label><?php esc_html_e( 'Card Number', 'sola-donations' ); ?></label>
-					<div id="ifields_card_number" class="sola-ifield-container"></div>
+				<!-- Payment Info -->
+				<div class="space-y-4 pt-4 border-t border-slate-700">
+					<h3 class="text-sm font-medium text-slate-400 uppercase tracking-wider"><?php esc_html_e( 'Payment Details', 'sola-donations' ); ?></h3>
+					
+					<div class="space-y-3">
+						<!-- Card Number -->
+						<div class="relative">
+							<div id="ifields_card_number" class="sola-ifield-container w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 h-[52px] focus-within:border-rose-400 transition-all"></div>
+						</div>
+						
+						<div class="grid grid-cols-2 gap-4">
+							<!-- Expiry -->
+							<div class="relative">
+								<div id="ifields_expiration_date" class="sola-ifield-container w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 h-[52px] focus-within:border-rose-400 transition-all"></div>
+							</div>
+							<!-- CVV -->
+							<div class="relative">
+								<div id="ifields_cvv" class="sola-ifield-container w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 h-[52px] focus-within:border-rose-400 transition-all"></div>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div class="sola-form-row">
-					<div class="sola-field-group">
-						<label><?php esc_html_e( 'Expiration', 'sola-donations' ); ?></label>
-						<div id="ifields_expiration_date" class="sola-ifield-container"></div>
-					</div>
-					<div class="sola-field-group">
-						<label><?php esc_html_e( 'CVV', 'sola-donations' ); ?></label>
-						<div id="ifields_cvv" class="sola-ifield-container"></div>
-					</div>
+
+				<!-- Submit Button -->
+				<button type="button" id="sola-submit-btn" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-rose-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+					<?php esc_html_e( 'Donate Now', 'sola-donations' ); ?>
+				</button>
+				
+				<div id="sola-message-container" class="text-center text-sm font-medium"></div>
+				
+				<div class="text-center">
+					<p class="text-xs text-slate-500 flex items-center justify-center gap-1">
+						<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+						Secured by Sola Payments
+					</p>
 				</div>
 			</div>
-
-			<button type="button" id="sola-submit-btn" class="sola-donation-btn">
-				<?php esc_html_e( 'Donate Now', 'sola-donations' ); ?>
-			</button>
-			<div id="sola-message-container"></div>
 		</div>
 		<?php
 	}
